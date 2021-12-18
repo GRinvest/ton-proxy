@@ -1,0 +1,7 @@
+__pycache__
+.vscode
+global.config.json
+tonlib-opencl-cli
+pow-miner-opencl
+lite-client
+Pipfile.lock
