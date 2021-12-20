@@ -58,6 +58,7 @@ class Miner:
                 break
             i += 1
         data = await self.result_list(result)
+        params["giver"] = powAddr
         params["seed"] = data[0]
         params["complexity"] = data[1]
         params["iterations"] = data[2]

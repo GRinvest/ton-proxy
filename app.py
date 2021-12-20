@@ -14,7 +14,7 @@ app = FastAPI(
     description=f"Proxy server for Ton miner",
     version="1.0"
 )
-app.include_router(router_api, prefix='/api')
+#app.include_router(router_api, prefix='/api')
 app.include_router(router_wss, prefix='/ws')
 
 

@@ -20,4 +20,7 @@ class ConnectionManager:
 
     async def broadcast(self, msg):
         for connection in self.active_connections:
-            await connection.send_json({"data": msg})
+            await connection.send_json({
+                "ok": True,
+                "data": msg
+                })

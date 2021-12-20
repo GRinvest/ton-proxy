@@ -2,6 +2,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from starlette.datastructures import State
 from uvicorn.main import logger
 from websockets.exceptions import ConnectionClosedError
+import asyncio
 
 router = APIRouter()
 
@@ -9,7 +10,11 @@ router = APIRouter()
 @router.websocket("/connect")
 async def websocket_endpoint(websocket: WebSocket):
     await State.manager.connect(websocket)
-    await State.manager.send_personal_message({"data": State.job}, websocket)
+    if State.job:
+        await State.manager.send_personal_message({
+            "ok": True,
+            "data": State.job
+            }, websocket)
     try:
         while True:
             await websocket.receive_text()
