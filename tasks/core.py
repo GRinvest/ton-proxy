@@ -26,11 +26,11 @@ class LiteClient:
     async def run(self, cmd, timeout=2):
         args = ['--global-config', self.config_path,
                 "--verbosity", "0", "--cmd", cmd]
-        process = await asyncio.create_subprocess_exec(self.app_path, *args, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.STDOUT)
+        process = await asyncio.create_subprocess_exec(self.app_path, *args, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
         try:
             stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
         except asyncio.exceptions.TimeoutError:
-            logger.debug(f"Command {cmd} timed out")
+            logger.error(f"Command {cmd} timed out")
         else:
             if stderr:
                 logger.error(f"Error lite-client: {stderr.decode()}")
@@ -49,25 +49,27 @@ class Miner:
         self.lite_client = LiteClient()
 
     async def get_pow_params(self, powAddr):
-        params = dict()
+        params = {}
         cmd = f"runmethod {powAddr} get_pow_params"
         i = 1
+        await self.liteclient.run('last', 5)
         while True:
             result = await self.lite_client.run(cmd, i)
             if result:
                 break
             i += 1
         data = await self.result_list(result)
-        params["giver"] = powAddr
-        params["seed"] = data[0]
-        params["complexity"] = data[1]
-        params["iterations"] = data[2]
+        if data:
+            params["giver"] = powAddr
+            params["seed"] = data[0]
+            params["complexity"] = data[1]
+            params["iterations"] = data[2]
         return params
 
     async def result_list(self, text):
         buff = await Pars(text, "result:", "\n")
         if buff is None or "error" in buff:
-            return
+            return False
         buff = buff.replace(')', ']')
         buff = buff.replace('(', '[')
         buff = buff.replace(']', ' ] ')
@@ -99,38 +101,38 @@ class Miner:
         return data
 
     async def best_giver(self):
-        givers = ["kf-kkdY_B7p-77TLn2hUhM6QidWrrsl8FYWCIvBMpZKprBtN", "kf8SYc83pm5JkGt0p3TQRkuiM58O9Cr3waUtR9OoFq716lN-", "kf-FV4QTxLl-7Ct3E6MqOtMt-RGXMxi27g4I645lw6MTWraV", "kf_NSzfDJI1A3rOM0GQm7xsoUXHTgmdhN5-OrGD8uwL2JMvQ", "kf8gf1PQy4u2kURl-Gz4LbS29eaN4sVdrVQkPO-JL80VhOe6",
-                  "kf8kO6K6Qh6YM4ddjRYYlvVAK7IgyW8Zet-4ZvNrVsmQ4EOF", "kf-P_TOdwcCh0AXHhBpICDMxStxHenWdLCDLNH5QcNpwMHJ8", "kf91o4NNTryJ-Cw3sDGt9OTiafmETdVFUMvylQdFPoOxIsLm", "kf9iWhwk9GwAXjtwKG-vN7rmXT3hLIT23RBY6KhVaynRrIK7", "kf8JfFUEJhhpRW80_jqD7zzQteH6EBHOzxiOhygRhBdt4z2N"]
+        givers = [
+            "kf-kkdY_B7p-77TLn2hUhM6QidWrrsl8FYWCIvBMpZKprBtN", "kf8SYc83pm5JkGt0p3TQRkuiM58O9Cr3waUtR9OoFq716lN-",
+            "kf-FV4QTxLl-7Ct3E6MqOtMt-RGXMxi27g4I645lw6MTWraV", "kf_NSzfDJI1A3rOM0GQm7xsoUXHTgmdhN5-OrGD8uwL2JMvQ",
+            "kf8gf1PQy4u2kURl-Gz4LbS29eaN4sVdrVQkPO-JL80VhOe6", "kf8kO6K6Qh6YM4ddjRYYlvVAK7IgyW8Zet-4ZvNrVsmQ4EOF",
+            "kf-P_TOdwcCh0AXHhBpICDMxStxHenWdLCDLNH5QcNpwMHJ8", "kf91o4NNTryJ-Cw3sDGt9OTiafmETdVFUMvylQdFPoOxIsLm",
+            "kf9iWhwk9GwAXjtwKG-vN7rmXT3hLIT23RBY6KhVaynRrIK7", "kf8JfFUEJhhpRW80_jqD7zzQteH6EBHOzxiOhygRhBdt4z2N"
+            ]
         best_pow = givers[0]
         best_complexity = 0
         for giver in givers:
             params = await self.get_pow_params(giver)
-            if best_complexity == 0:
-                best_complexity = params["complexity"]
-                best_pow = giver
-            if params["complexity"] > best_complexity:
-                best_pow = giver
-                best_complexity = params["complexity"]
+            if params:
+                if best_complexity == 0:
+                    best_complexity = params["complexity"]
+                    best_pow = giver
+                if params["complexity"] > best_complexity:
+                    best_pow = giver
+                    best_complexity = params["complexity"]
         return best_pow
 
 
 async def task_job() -> Dict:
     logger.info("Run task_job()")
     miner = Miner()
-    liteclient =LiteClient()
     State.job = {}
-    State.seed_list = []
     while True:
         if State.giver != 'auto':
-            await liteclient.run('last')
             result = await miner.get_pow_params(State.giver)
-            if result['seed'] not in State.seed_list:
-                State.seed_list.append(result['seed'])
+            if result.get('seed', '') != State.job.get('seed', ''):
                 State.job.update(result)
                 await State.manager.broadcast(result)
-                if len(State.seed_list) > 10:
-                    State.seed_list.pop(0)
-        await asyncio.sleep(2)
+        await asyncio.sleep(1)
 
 
 async def task_auto():
@@ -138,4 +140,4 @@ async def task_auto():
     instance = Miner()
     while True:
         State.giver = await instance.best_giver()
-        await asyncio.sleep(60)
+        await asyncio.sleep(360)
