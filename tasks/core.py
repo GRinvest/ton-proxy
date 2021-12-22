@@ -52,14 +52,14 @@ class Miner:
         params = {}
         cmd = f"runmethod {powAddr} get_pow_params"
         i = 1
-        await self.liteclient.run('last', 5)
+        await self.lite_client.run('last', 5)
         while True:
             result = await self.lite_client.run(cmd, i)
             if result:
                 break
             i += 1
         data = await self.result_list(result)
-        if len(data):
+        if data:
             params["giver"] = powAddr
             params["seed"] = data[0]
             params["complexity"] = data[1]
@@ -69,7 +69,7 @@ class Miner:
     async def result_list(self, text):
         buff = await Pars(text, "result:", "\n")
         if buff is None or "error" in buff:
-            return []
+            return False
         buff = buff.replace(')', ']')
         buff = buff.replace('(', '[')
         buff = buff.replace(']', ' ] ')
