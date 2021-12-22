@@ -118,12 +118,16 @@ async def task_job() -> Dict:
     logger.info("Run task_job()")
     instance = Miner()
     State.job = {}
+    State.seed_list = []
     while True:
         if State.giver != 'auto':
             result = await instance.get_pow_params(State.giver)
-            if result['seed'] != State.job.get('seed', ''):
+            if result['seed'] not in State.seed_list:
+                State.seed_list.append(result['seed'])
                 State.job.update(result)
                 await State.manager.broadcast(result)
+                if len(State.seed_list) > 10:
+                    State.seed_list.pop(0)
         await asyncio.sleep(2)
 
 
