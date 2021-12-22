@@ -130,7 +130,7 @@ async def task_job() -> Dict:
                 await State.manager.broadcast(result)
                 if len(State.seed_list) > 10:
                     State.seed_list.pop(0)
-        await asyncio.sleep(5)
+        await asyncio.sleep(2)
 
 
 async def task_auto():
