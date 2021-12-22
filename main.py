@@ -34,6 +34,7 @@ def createParser():
         metavar="lite-client",
         help=f'path lite-client (default: {path})'
     )
+
     parent_group.add_argument(
         '-u',
         dest="host",
@@ -56,7 +57,13 @@ def createParser():
         metavar='giver_wallet',
         help='wallet giver or auto An easy giver is selected (default: auto)'
     )
-
+    parent_group.add_argument(
+        '-L',
+        dest="logger",
+        default="info",
+        metavar="lite-client",
+        help=f'Logger level (default: info)'
+    )
     parser.add_argument('--help', '-h', action='help', help='This is help')
     parser.add_argument('--version', '-v', action='version',
                         help='Print version number', version='%(prog)s {}'.format(VERSION))
@@ -69,4 +76,4 @@ if __name__ == '__main__':
     State.args = parser.parse_args()
     print(State.args.сonfig)
     uvicorn.run("app:app", host=State.args.host, port=State.args.port,
-                log_level="info", reload=False)
+                log_level=State.args.logger, reload=False)

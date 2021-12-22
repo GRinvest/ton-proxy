@@ -23,24 +23,32 @@ class LiteClient:
         self.app_path = State.args.liteclient
         self.config_path = State.args.сonfig
 
-    async def run(self, cmd, timeout=2):
+    async def run(self, cmd, timeout=0):
         args = ['--global-config', self.config_path,
-                "--verbosity", "0", "--cmd", cmd]
-        process = await asyncio.create_subprocess_exec(self.app_path, *args, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-        try:
-            stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
-        except asyncio.exceptions.TimeoutError:
-            logger.error(f"Command {cmd} timed out")
-        else:
-            if stderr:
-                logger.error(f"Error lite-client: {stderr.decode()}")
-            else:
-                return stdout.decode()
-        finally:
-            try:
-                process.kill()
-            except OSError:
-                pass
+                        "--verbosity", "0", "--cmd", cmd]
+        if timeout == 0:
+            timeout = 5
+            while True:
+                process = await asyncio.create_subprocess_exec(self.app_path, *args, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+                try:
+                    stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
+                except asyncio.exceptions.TimeoutError:
+                    logger.debug(f"Command {cmd} timed out: {timeout} seconds")
+                    if timeout <= 10:
+                        timeout += 1
+                else:
+                    if stderr:
+                        logger.error(f"Error lite-client: {stderr.decode()}")
+                        timeout = 5
+                        await asyncio.sleep(3)
+                        continue
+                    else:
+                        return stdout.decode()
+                finally:
+                    try:
+                        process.terminate()
+                    except OSError:
+                        pass
 
 
 class Miner:
@@ -48,16 +56,12 @@ class Miner:
     def __init__(self):
         self.lite_client = LiteClient()
 
-    async def get_pow_params(self, powAddr):
+    async def get_last(self) -> None:
+        await self.lite_client.run('last')
+
+    async def get_pow_params(self, powAddr) -> dict:
         params = {}
-        cmd = f"runmethod {powAddr} get_pow_params"
-        i = 1
-        await self.lite_client.run('last', 5)
-        while True:
-            result = await self.lite_client.run(cmd, i)
-            if result:
-                break
-            i += 1
+        result = await self.lite_client.run(f"runmethod {powAddr} get_pow_params")
         data = await self.result_list(result)
         if data:
             params["giver"] = powAddr
@@ -66,7 +70,7 @@ class Miner:
             params["iterations"] = data[2]
         return params
 
-    async def result_list(self, text):
+    async def result_list(self, text) -> list:
         buff = await Pars(text, "result:", "\n")
         if buff is None or "error" in buff:
             return False
@@ -100,7 +104,7 @@ class Miner:
         data = json.loads(output)
         return data
 
-    async def best_giver(self):
+    async def best_giver(self) -> str:
         givers = [
             "kf-kkdY_B7p-77TLn2hUhM6QidWrrsl8FYWCIvBMpZKprBtN", "kf8SYc83pm5JkGt0p3TQRkuiM58O9Cr3waUtR9OoFq716lN-",
             "kf-FV4QTxLl-7Ct3E6MqOtMt-RGXMxi27g4I645lw6MTWraV", "kf_NSzfDJI1A3rOM0GQm7xsoUXHTgmdhN5-OrGD8uwL2JMvQ",
@@ -122,12 +126,13 @@ class Miner:
         return best_pow
 
 
-async def task_job() -> Dict:
+async def task_job() -> None:
     logger.info("Run task_job()")
     miner = Miner()
     State.job = {}
     while True:
         if State.giver != 'auto':
+            await miner.get_last()
             result = await miner.get_pow_params(State.giver)
             if result.get('seed', '') != State.job.get('seed', ''):
                 State.job.update(result)
@@ -135,9 +140,14 @@ async def task_job() -> Dict:
         await asyncio.sleep(1)
 
 
-async def task_auto():
+async def task_auto() -> None:
     logger.info("Run task_auto()")
-    instance = Miner()
+    miner = Miner()
+    result = None
     while True:
-        State.giver = await instance.best_giver()
-        await asyncio.sleep(360)
+        await miner.get_last()
+        result = await miner.best_giver()
+        if result is not None and State.giver != result:
+            State.giver = result
+            logger.info(f"New Best Giver: {State.giver}")
+        await asyncio.sleep(30)
