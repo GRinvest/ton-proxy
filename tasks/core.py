@@ -116,12 +116,14 @@ class Miner:
 
 async def task_job() -> Dict:
     logger.info("Run task_job()")
-    instance = Miner()
+    miner = Miner()
+    liteclient =LiteClient()
     State.job = {}
     State.seed_list = []
     while True:
         if State.giver != 'auto':
-            result = await instance.get_pow_params(State.giver)
+            await liteclient.run('last')
+            result = await miner.get_pow_params(State.giver)
             if result['seed'] not in State.seed_list:
                 State.seed_list.append(result['seed'])
                 State.job.update(result)
