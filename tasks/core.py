@@ -59,7 +59,7 @@ class Miner:
                 break
             i += 1
         data = await self.result_list(result)
-        if data:
+        if len(data):
             params["giver"] = powAddr
             params["seed"] = data[0]
             params["complexity"] = data[1]
@@ -69,7 +69,7 @@ class Miner:
     async def result_list(self, text):
         buff = await Pars(text, "result:", "\n")
         if buff is None or "error" in buff:
-            return False
+            return []
         buff = buff.replace(')', ']')
         buff = buff.replace('(', '[')
         buff = buff.replace(']', ' ] ')
