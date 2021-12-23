@@ -66,7 +66,7 @@ class Miner:
         if data:
             params["giver"] = powAddr
             params["seed"] = data[0]
-            params["complexity"] = data[1] * 10
+            params["complexity"] = data[1]
             params["iterations"] = data[2]
         return params
 
