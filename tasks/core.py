@@ -27,14 +27,14 @@ class LiteClient:
         args = ['--global-config', self.config_path,
                         "--verbosity", "0", "--cmd", cmd]
         if timeout == 0:
-            timeout = 5
+            timeout = 10
             while True:
                 process = await asyncio.create_subprocess_exec(self.app_path, *args, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
                 try:
                     stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
                 except asyncio.exceptions.TimeoutError:
                     logger.debug(f"Command {cmd} timed out: {timeout} seconds")
-                    if timeout <= 10:
+                    if timeout <= 20:
                         timeout += 1
                 else:
                     if stderr:
@@ -137,7 +137,7 @@ async def task_job() -> None:
             if result.get('seed', '') != State.job.get('seed', ''):
                 State.job.update(result)
                 await State.manager.broadcast(result)
-        await asyncio.sleep(1)
+        await asyncio.sleep(10)
 
 
 async def task_auto() -> None:
