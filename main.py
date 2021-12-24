@@ -61,7 +61,7 @@ def createParser():
         '-L',
         dest="logger",
         default="info",
-        metavar="lite-client",
+        metavar="info",
         help=f'Logger level (default: info)'
     )
     parser.add_argument('--help', '-h', action='help', help='This is help')

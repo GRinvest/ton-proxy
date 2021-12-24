@@ -28,27 +28,27 @@ class LiteClient:
                         "--verbosity", "0", "--cmd", cmd]
         if timeout == 0:
             timeout = 10
-            while True:
-                process = await asyncio.create_subprocess_exec(self.app_path, *args, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
-                try:
-                    stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
-                except asyncio.exceptions.TimeoutError:
-                    logger.debug(f"Command {cmd} timed out: {timeout} seconds")
-                    if timeout <= 20:
-                        timeout += 1
+        while True:
+            process = await asyncio.create_subprocess_exec(self.app_path, *args, stdin=asyncio.subprocess.PIPE, stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.PIPE)
+            try:
+                stdout, stderr = await asyncio.wait_for(process.communicate(), timeout=timeout)
+            except asyncio.exceptions.TimeoutError:
+                logger.debug(f"Command {cmd} timed out: {timeout} seconds")
+                if timeout <= 20:
+                    timeout += 1
+            else:
+                if stderr:
+                    logger.error(f"Error lite-client: {stderr.decode()}")
+                    timeout = 5
+                    await asyncio.sleep(3)
+                    continue
                 else:
-                    if stderr:
-                        logger.error(f"Error lite-client: {stderr.decode()}")
-                        timeout = 5
-                        await asyncio.sleep(3)
-                        continue
-                    else:
-                        return stdout.decode()
-                finally:
-                    try:
-                        process.terminate()
-                    except OSError:
-                        pass
+                    return stdout.decode()
+            finally:
+                try:
+                    process.terminate()
+                except OSError:
+                    pass
 
 
 class Miner:
