@@ -5,14 +5,14 @@ This is a proxy for solo mining coin [Toncoin (The Open Network)](https://ton.or
 ___
 For the proxy to work, you need an Ubuntu server with a fixed ip if the farms are located in different locations or make a connection inside the network.
 - [ ] The launch is quite simple and you do not need to have any special knowledge:
-    - [X] [Download proxies from the releases page](https://github.com/GRinvest/ton-proxy/releases)
+
+    - [X] Create and go to folder [Download proxies from the releases page](https://github.com/GRinvest/ton-proxy/releases) and unpack  
     ```shell
-    wget https://github.com/GRinvest/ton-proxy/releases/download/0.1.5/ton-proxy.tar.gz
-    ```
-    - [X] Unpack and go to the miner folder
-    ```shell
-    tar xvf ton-proxy.tar.gz
+    mkdir ton-proxy
     cd ton-proxy
+    wget https://github.com/GRinvest/ton-proxy/releases/download/0.1.5/ton-proxy.tar.gz
+    tar xvf ton-proxy.tar.gz
+    ./ton-proxy -h
     ```
     - [X] Run the file `./ton-proxy` with additional arguments, to view the list of commands, use the flag `-h` or `--help`  
 Example: ` ./ton-proxy -h`  
