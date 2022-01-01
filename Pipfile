@@ -7,6 +7,8 @@ name = "pypi"
 fastapi = "*"
 uvicorn = {extras = ["standard"], version = "*"}
 ujson = "*"
+crc16 = "*"
+pyinstaller = "*"
 
 [dev-packages]
 autopep8 = "*"

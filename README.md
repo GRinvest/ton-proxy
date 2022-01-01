@@ -1,3 +1,4 @@
+
 # The lightning-fast ASGI ton-proxy server.
 ___
 This is a proxy for solo mining coin [Toncoin (The Open Network)](https://ton.org/mining). Improves the stability of the miner and increases the percentage of accepted shares. Powered by the official miner with minor modifications.   [Visit the releases page](https://github.com/GRinvest/tonminer/releases) to select the latest version for your system. It also removes the problem with frequent shutdowns of video cards.
@@ -31,5 +32,14 @@ If you liked my development and would like to support the project. I would be gr
 TON: EQCtpc260pZIxRlifzmbefdHm4gUTKAMbmwaFebo7WiBiGc9  
 
 For questions and suggestions, please contact [Telegram Group](https://t.me/tonsolominingdev)
+
+___
+Some functions for work Lite-client are taken from [here](https://github.com/igroman787/mytonctrl). Thank you very much to the author.  
+Also a huge gratitude, in helping to create the project [wolfpro](https://github.com/wolfpro/)  
+
+P.S. I see how the project is actively developing, so it is very interesting to start developing TON for the entire eco-system. I want to wish the developers success in this difficult matter and the entire community  
+
+> Never doubt that a small group of thoughtful, citizens can change the world. Indeed, it is the only thing that ever has.  
+> --Margaret Mead
 ___
 <p align="center"><i>Ton-proxy is <a href="https://github.com/GRinvest/ton-proxy/blob/master/LICENSE.md">BSD licensed</a> code.<br/>Designed & built in Novosibirsk, Russia.</i></p>
