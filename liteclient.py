@@ -46,6 +46,7 @@ class LiteClient:
                     LiteClient.STATE_INDEX += 1
                 if timeout <= 20:
                     timeout += 1
+                continue
             else:
                 if stderr:
                     print(f"Error lite-client: {stderr.decode()}")
